@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Kinerja IT Center TUJ 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --red: #CC0000;
+    --red-dark: #990000;
+    --red-muted: rgba(204,0,0,0.08);
+    --red-border: rgba(204,0,0,0.2);
+    --bg: #f7f6f4;
+    --surface: #ffffff;
+    --surface-alt: #faf9f8;
+    --text: #1a1a1a;
+    --text-secondary: #5a5a5a;
+    --text-muted: #9a9a9a;
+    --border: #e8e6e3;
+    --green: #059669;
+    --yellow: #d97706;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.10), 0 8px 16px rgba(0,0,0,0.06);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 64px;
+    flex-wrap: wrap;
+  }
+  .logo-badge {
+    width: 36px; height: 36px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-badge svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .header-titles { flex: 1; min-width: 160px; }
+  .header-titles h1 { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .header-titles p { font-size: 11px; color: var(--text-muted); }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* ── Page nav ── */
+  .page-nav {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .page-tab {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; border: none;
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.15s; font-family: inherit;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .page-tab.active { background: var(--red); color: white; box-shadow: 0 1px 4px rgba(204,0,0,0.3); }
+  .page-tab:hover:not(.active) { background: var(--border); color: var(--text); }
+
+  /* ── TW tabs (triwulan page only) ── */
+  .tw-tabs {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px; gap: 2px;
+    border: 1px solid var(--border);
+  }
+  .tw-tab {
+    padding: 5px 14px; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; border: none;
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.15s; font-family: inherit;
+  }
+  .tw-tab.active { background: var(--red); color: white; box-shadow: 0 1px 4px rgba(204,0,0,0.3); }
+  .tw-tab:hover:not(.active) { background: var(--border); color: var(--text); }
+
+  .timestamp { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; white-space: nowrap; }
+
+  .btn-input {
+    background: var(--red); color: white; border: none;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.15s; white-space: nowrap;
+  }
+  .btn-input:hover { background: var(--red-dark); }
+
+  /* ─── PAGE CONTAINERS ─── */
+  .page { display: none; }
+  .page.active { display: block; }
+  .main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* ─── SUMMARY CARDS ─── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-bottom: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--card-accent, var(--border));
+  }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .card-label {
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 10px; line-height: 1.3; padding-right: 28px;
+  }
+  .card-value { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+  .card-value.empty { font-size: 14px; color: var(--text-muted); font-family: inherit; font-weight: 500; }
+  .card-target { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .card-target span { font-weight: 600; color: var(--text-secondary); }
+  .card-compare {
+    font-size: 10px; color: var(--text-muted);
+    padding-top: 8px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .compare-val { font-weight: 600; font-family: 'DM Mono', monospace; }
+  .badge { position: absolute; top: 14px; right: 14px; font-size: 16px; line-height: 1; }
+  .card.status-green { --card-accent: var(--green); }
+  .card.status-yellow { --card-accent: var(--yellow); }
+  .card.status-red { --card-accent: var(--red); }
+  .card.status-empty { --card-accent: var(--border); }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 28px; }
+  .section-header h2 { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+  .section-pill {
+    font-size: 10px; background: var(--red-muted); color: var(--red);
+    border: 1px solid var(--red-border); padding: 2px 8px;
+    border-radius: 100px; font-weight: 600; white-space: nowrap;
+  }
+
+  /* ─── TABLE (triwulan) ─── */
+  .table-wrapper {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow-sm); margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  thead { background: #faf9f8; }
+  thead th {
+    padding: 10px 14px; font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase;
+    letter-spacing: 0.04em; text-align: left;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  thead th:not(:first-child) { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-alt); }
+  tbody td { padding: 10px 14px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  tbody td:not(:first-child):not(:nth-child(2)) { text-align: center; }
+  .td-indicator { font-weight: 500; }
+  .td-unit { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; text-align: center; }
+  .td-target { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .td-realisasi { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .td-empty { color: var(--text-muted); font-size: 12px; }
+  .td-gap { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; }
+  .td-gap.pos { color: var(--green); }
+  .td-gap.neg { color: var(--red); }
+  .td-gap.dash { color: var(--text-muted); }
+  .status-cell { font-size: 14px; }
+  .group-header td {
+    background: #f7f6f4; font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tidak-diukur { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+  /* ─── CHARTS (triwulan) ─── */
+  .charts-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .charts-grid .chart-card h3 { font-size: 11px; }
+  .charts-grid .chart-container { height: 150px; }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm);
+  }
+  .chart-card h3 { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .chart-subtitle { font-size: 10px; color: var(--text-muted); margin-bottom: 14px; }
+  .chart-container { position: relative; height: 180px; }
+  .chart-legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-secondary); }
+  .legend-line { width: 20px; height: 2px; border-radius: 2px; }
+  .legend-line.dashed { background: repeating-linear-gradient(90deg,#9ca3af 0,#9ca3af 4px,transparent 4px,transparent 8px); }
+  .chart-note { font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 8px; text-align: center; }
+
+  /* ─── STATUS SUMMARY ─── */
+  .status-summary {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .status-summary-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+  .status-divider { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+  .status-items { display: flex; gap: 20px; flex-wrap: wrap; }
+  .status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .status-item .si-emoji { font-size: 14px; }
+  .status-item .si-label { color: var(--text-secondary); }
+  .status-item .si-count { font-size: 18px; font-weight: 800; color: var(--text); font-family: 'DM Mono', monospace; line-height: 1; }
+  .status-total { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+  .status-total strong { font-size: 18px; font-weight: 800; color: var(--text); font-family: 'DM Mono', monospace; }
+
+  /* ─── DATA NOTE ─── */
+  .data-note {
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 11px; color: #92400e;
+    margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start;
+  }
+
+  /* ══════════════════════════════════════
+     ANNUAL PAGE STYLES
+  ══════════════════════════════════════ */
+
+  /* ── Annual KPI summary cards ── */
+  .annual-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .annual-kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+  }
+  .annual-kpi-card .akc-label {
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;
+  }
+  .annual-kpi-card .akc-value {
+    font-size: 36px; font-weight: 800;
+    font-family: 'DM Mono', monospace; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .annual-kpi-card .akc-sub { font-size: 11px; color: var(--text-muted); }
+  .akc-green .akc-value { color: var(--green); }
+  .akc-yellow .akc-value { color: var(--yellow); }
+  .akc-red .akc-value { color: var(--red); }
+  .akc-gray .akc-value { color: var(--text-muted); }
+
+  /* ── Annual matrix table ── */
+  .annual-table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .annual-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  .annual-table thead { background: #faf9f8; }
+  .annual-table thead tr:first-child th {
+    padding: 10px 12px 6px;
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: none;
+  }
+  .annual-table thead tr:last-child th {
+    padding: 4px 12px 10px;
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--border);
+  }
+  .annual-table thead th { text-align: center; white-space: nowrap; }
+  .annual-table thead th:first-child,
+  .annual-table thead th:nth-child(2) { text-align: left; }
+
+  .annual-table .th-group {
+    border-left: 2px solid var(--border);
+    border-right: 2px solid var(--border);
+  }
+  .annual-table .th-group-tw1 { border-left-color: #dbeafe; }
+  .annual-table .th-group-tw2 { border-left-color: #d1fae5; }
+  .annual-table .th-group-tw3 { border-left-color: #fef3c7; }
+  .annual-table .th-group-tw4 { border-left-color: #fee2e2; }
+
+  .annual-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .annual-table tbody tr:last-child { border-bottom: none; }
+  .annual-table tbody tr:hover { background: var(--surface-alt); }
+  .annual-table tbody td {
+    padding: 9px 12px; font-size: 12px;
+    color: var(--text); vertical-align: middle;
+    text-align: center;
+  }
+  .annual-table tbody td:first-child { text-align: left; font-weight: 500; font-size: 13px; min-width: 220px; }
+  .annual-table tbody td:nth-child(2) { text-align: center; font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  /* TW column borders */
+  .annual-table td.tw-border-left { border-left: 2px solid var(--border); }
+
+  /* Cell chips */
+  .cell-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 7px; border-radius: 100px;
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .cell-chip.green { background: #ecfdf5; color: var(--green); }
+  .cell-chip.yellow { background: #fffbeb; color: var(--yellow); }
+  .cell-chip.red { background: #fef2f2; color: var(--red); }
+  .cell-chip.empty { background: var(--bg); color: var(--text-muted); font-family: inherit; font-size: 11px; }
+  .cell-chip.none { background: transparent; color: var(--text-muted); font-family: inherit; font-style: italic; font-size: 11px; }
+
+  /* Sparkline column */
+  .sparkline-cell { width: 80px; text-align: center !important; padding: 6px 8px !important; }
+  .sparkline-cell canvas { display: block; margin: auto; }
+
+  /* Annual group header */
+  .annual-group-hdr td {
+    background: #f7f6f4; font-size: 10px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase;
+    letter-spacing: 0.07em; padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Annual completion bar ── */
+  .completion-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .completion-label { font-size: 12px; color: var(--text-secondary); min-width: 90px; }
+  .completion-bar-wrap { flex: 1; height: 8px; background: var(--bg); border-radius: 100px; overflow: hidden; border: 1px solid var(--border); }
+  .completion-bar { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+  .completion-pct { font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace; min-width: 36px; text-align: right; }
+
+  /* ── Progress bands ── */
+  .progress-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow-sm); margin-bottom: 24px;
+  }
+  .progress-card h3 {
+    font-size: 12px; font-weight: 700; color: var(--text);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  /* ── Annual detail charts grid ── */
+  .annual-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 200; display: flex;
+    align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: 16px;
+    width: 100%; max-width: 560px; max-height: 90vh;
+    overflow-y: auto; box-shadow: var(--shadow-lg);
+    transform: translateY(20px); transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--surface);
+  }
+  .modal-header h2 { font-size: 15px; font-weight: 700; }
+  .modal-header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border); background: none; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: background 0.1s;
+  }
+  .modal-close:hover { background: var(--bg); }
+  .modal-body { padding: 20px 24px; }
+  .modal-tw-select { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .modal-tw-select label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .modal-tw-select select {
+    padding: 6px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-family: inherit; font-size: 13px;
+    background: var(--bg); cursor: pointer; outline: none;
+  }
+  .modal-tw-select select:focus { border-color: var(--red); }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .form-group .unit-hint { font-size: 10px; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+  .form-group input {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'DM Mono', monospace; font-size: 13px; outline: none;
+    transition: border-color 0.15s; background: var(--surface);
+  }
+  .form-group input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(204,0,0,0.08); }
+  .form-group .disabled-label {
+    display: block; padding: 8px 12px; background: var(--bg);
+    border: 1px dashed var(--border); border-radius: 8px;
+    font-size: 12px; color: var(--text-muted); font-style: italic;
+  }
+  .form-section-header {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 10px 0 8px; border-top: 1px solid var(--border); margin-top: 4px;
+  }
+  .modal-footer {
+    padding: 16px 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+    position: sticky; bottom: 0; background: var(--surface);
+  }
+  .btn-secondary {
+    padding: 8px 18px; border: 1px solid var(--border); background: none;
+    border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; color: var(--text-secondary); transition: background 0.1s;
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-primary {
+    padding: 8px 20px; background: var(--red); color: white;
+    border: none; border-radius: 8px; font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--red-dark); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1100px) {
+    .cards-grid { grid-template-columns: repeat(4, 1fr); }
+    .charts-grid { grid-template-columns: repeat(2, 1fr); }
+    .annual-charts-grid { grid-template-columns: repeat(2, 1fr); }
+    .annual-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid, .annual-charts-grid { grid-template-columns: 1fr; }
+    .annual-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .header-inner { flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 8px; }
+    .main { padding: 16px; }
+    .status-summary { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .status-total { margin-left: 0; }
+  }
+  @media (max-width: 500px) {
+    .cards-grid, .annual-kpi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-badge">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div class="header-titles">
+      <h1>Dashboard Kinerja IT Center TUJ 2026</h1>
+      <p>Monitoring Triwulanan — Non-Financial KPI &nbsp;·&nbsp; Pusat TIK Telkom University Jakarta</p>
+    </div>
+    <div class="header-controls">
+      <!-- Page Navigation -->
+      <div class="page-nav" id="pageNav">
+        <button class="page-tab active" data-page="triwulan">📊 Per Triwulan</button>
+        <button class="page-tab" data-page="tahunan">📅 Tahunan</button>
+      </div>
+      <!-- TW Tabs — shown only on triwulan page -->
+      <div class="tw-tabs" id="twTabsWrap">
+        <button class="tw-tab active" data-tw="1">TW1</button>
+        <button class="tw-tab" data-tw="2">TW2</button>
+        <button class="tw-tab" data-tw="3">TW3</button>
+        <button class="tw-tab" data-tw="4">TW4</button>
+      </div>
+      <button class="btn-input" onclick="openModal()">✏️ Input Realisasi</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ PAGE: TRIWULAN ═══════════════════ -->
+<div class="page active" id="page-triwulan">
+<main class="main">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:11px;color:var(--text-muted);">
+      Menampilkan data untuk <strong id="twLabel" style="color:var(--text);">Triwulan 1 (TW1)</strong>
+    </div>
+    <div class="timestamp" id="tsLabel">Terakhir diperbarui: —</div>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <!-- Grafik Tren: di atas Ringkasan Status -->
+  <div class="section-header" style="margin-top:0;">
+    <h2>Grafik Tren Indikator</h2>
+    <div class="section-line"></div>
+    <div class="section-pill" id="twChartPill">TW1 · 2025 vs 2026</div>
+  </div>
+  <div class="charts-grid">
+    <!-- Baris 1: indikator lama (ada data 2025) -->
+    <div class="chart-card">
+      <h3>SLA Infrastruktur TI</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartInfra"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>SLA Penanganan Insiden</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartInsiden"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Feedback Layanan PUTI</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartFeedback"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>CMDB Coverage</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartCmdb"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <!-- Baris 2 -->
+    <div class="chart-card">
+      <h3>Website Performansi</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartWebperf"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Visitor Web Official</h3>
+      <div class="chart-subtitle">Realisasi 2025 · Target 2026 · Realisasi 2026</div>
+      <div class="chart-container"><canvas id="chartVisitor"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line dashed"></div> 2025</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+    </div>
+    <!-- Indikator baru — tidak ada data 2025 -->
+    <div class="chart-card">
+      <h3>Konten Artikel Website</h3>
+      <div class="chart-subtitle">Target 2026 · Realisasi 2026 <em style="font-style:normal;opacity:0.6">(indikator baru)</em></div>
+      <div class="chart-container"><canvas id="chartArtikel"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+      <div class="chart-note">Tidak ada data baseline 2025</div>
+    </div>
+    <div class="chart-card">
+      <h3>SLA Request Management</h3>
+      <div class="chart-subtitle">Target 2026 · Realisasi 2026 <em style="font-style:normal;opacity:0.6">(tdk ada baseline)</em></div>
+      <div class="chart-container"><canvas id="chartRequest"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);opacity:0.4;"></div> Target</div>
+        <div class="legend-item"><div class="legend-line" style="background:var(--red);height:3px;"></div> 2026</div>
+      </div>
+      <div class="chart-note">Tidak ada data baseline 2025</div>
+    </div>
+  </div>
+
+  <div class="status-summary" id="statusSummary"></div>
+  <div class="data-note" id="dataNoteEl">
+    ⚠️ <span>Realisasi 2026 belum diinput. Gunakan tombol <strong>✏️ Input Realisasi</strong> untuk mengisi data.</span>
+  </div>
+
+  <div class="section-header">
+    <h2>Tabel Semua Indikator</h2>
+    <div class="section-line"></div>
+    <div class="section-pill" id="twPill">TW1</div>
+  </div>
+  <div class="table-wrapper">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th style="width:34%">Indikator</th>
+          <th>Unit</th>
+          <th>Target 2026</th>
+          <th>Realisasi 2026</th>
+          <th>Gap</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</main>
+</div>
+
+<!-- ═══════════════════ PAGE: TAHUNAN ═══════════════════ -->
+<div class="page" id="page-tahunan">
+<main class="main">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:11px;color:var(--text-muted);">
+      Tampilan <strong style="color:var(--text);">Seluruh Indikator — Tahun 2026</strong> &nbsp;·&nbsp; Semua Triwulan (TW1–TW4)
+    </div>
+    <div class="timestamp" id="tsLabelAnnual">Terakhir diperbarui: —</div>
+  </div>
+
+  <!-- Annual KPI Cards -->
+  <div class="annual-kpi-grid" id="annualKpiGrid"></div>
+
+  <!-- Completion Progress -->
+  <div class="progress-card" id="annualProgressCard"></div>
+
+  <!-- Annual Matrix Table -->
+  <div class="section-header">
+    <h2>Matriks Semua Indikator — TW1 s.d. TW4</h2>
+    <div class="section-line"></div>
+    <div class="section-pill">2026 Full Year</div>
+  </div>
+  <div class="data-note">
+    ℹ️ <span>Nilai yang ditampilkan adalah Realisasi 2026 vs Target 2026 per triwulan. Chip berwarna menunjukkan status otomatis. Sparkline menampilkan tren realisasi sepanjang tahun.</span>
+  </div>
+  <div class="annual-table-wrapper">
+    <table class="annual-table" id="annualTable">
+      <thead>
+        <tr>
+          <th rowspan="2" style="text-align:left;vertical-align:bottom;">Indikator</th>
+          <th rowspan="2" style="vertical-align:bottom;">Unit</th>
+          <th colspan="2" class="th-group th-group-tw1" style="border-radius:0;">TW1</th>
+          <th colspan="2" class="th-group th-group-tw2">TW2</th>
+          <th colspan="2" class="th-group th-group-tw3">TW3</th>
+          <th colspan="2" class="th-group th-group-tw4">TW4</th>
+          <th rowspan="2" style="vertical-align:bottom;">Tren</th>
+        </tr>
+        <tr>
+          <th class="th-group th-group-tw1">Target</th><th class="th-group th-group-tw1">Realisasi</th>
+          <th class="th-group th-group-tw2">Target</th><th class="th-group th-group-tw2">Realisasi</th>
+          <th class="th-group th-group-tw3">Target</th><th class="th-group th-group-tw3">Realisasi</th>
+          <th class="th-group th-group-tw4">Target</th><th class="th-group th-group-tw4">Realisasi</th>
+        </tr>
+      </thead>
+      <tbody id="annualTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Annual trend charts (3 key indicators) -->
+  <div class="section-header">
+    <h2>Grafik Tren Tahunan — Indikator Utama</h2>
+    <div class="section-line"></div>
+    <div class="section-pill">TW1 – TW4 · 2026</div>
+  </div>
+  <div class="annual-charts-grid">
+    <div class="chart-card">
+      <h3>SLA Penanganan Insiden</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartInsiden"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Visitor Web Official</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartVisitor"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Feedback Layanan PUTI</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartFeedback"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>SLA Infrastruktur TI</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartInfra"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>CMDB Coverage</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartCmdb"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Website Performansi</h3>
+      <div class="chart-subtitle">Target vs Realisasi 2026 per TW</div>
+      <div class="chart-container"><canvas id="aChartWebperf"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Baseline comparison -->
+  <div class="section-header">
+    <h2>Perbandingan Realisasi 2025 vs 2026</h2>
+    <div class="section-line"></div>
+    <div class="section-pill">Hanya indikator lama</div>
+  </div>
+  <div class="annual-table-wrapper">
+    <table class="annual-table" id="baselineTable">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Indikator</th>
+          <th>Unit</th>
+          <th>TW1 · 2025</th><th>TW1 · 2026</th>
+          <th>TW2 · 2025</th><th>TW2 · 2026</th>
+          <th>TW3 · 2025</th><th>TW3 · 2026</th>
+          <th>TW4 · 2025</th><th>TW4 · 2026</th>
+        </tr>
+      </thead>
+      <tbody id="baselineTableBody"></tbody>
+    </table>
+  </div>
+
+</main>
+</div>
+
+<!-- ═══════════════════ MODAL ═══════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>✏️ Input Realisasi 2026</h2>
+        <p id="modalSubtitle">Masukkan nilai realisasi untuk triwulan yang dipilih</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tw-select">
+        <label>Triwulan:</label>
+        <select id="modalTwSelect" onchange="renderModalForm()">
+          <option value="1">TW1</option>
+          <option value="2">TW2</option>
+          <option value="3">TW3</option>
+          <option value="4">TW4</option>
+        </select>
+      </div>
+      <div id="modalForm"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Batal</button>
+      <button class="btn-primary" onclick="saveModal()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+
+const LABELS = ['TW1','TW2','TW3','TW4'];
+
+const indicators = [
+  { id:'infra',    group:'penjaminan', name:'SLA Keberfungsian Layanan Infrastruktur TI',              unit:'%',      target26:[92,92,92,92],            baseline25:[100,100,100,100],          isNew:false, cardKey:true  },
+  { id:'insiden',  group:'penjaminan', name:'SLA Penanganan Insiden',                                  unit:'%',      target26:[90,90,90,90],            baseline25:[91.7,94.7,96.7,97.0],      isNew:false, cardKey:true  },
+  { id:'request',  group:'penjaminan', name:'SLA Penanganan Permintaan Akses Internet',                unit:'%',      target26:[92,92,92,92],            baseline25:null,                       isNew:false, cardKey:true  },
+  { id:'feedback', group:'penjaminan', name:'Feedback Layanan PUTI',                                   unit:'Rating', target26:[4,4,4,4],                baseline25:[4.95,4.96,4.98,4.91],      isNew:false, cardKey:true  },
+  { id:'cmdb',     group:'penjaminan', name:'% of CIs Mapped Onto IT Services in CMDB',               unit:'%',      target26:[90,90,90,90],            baseline25:[100,100,99.94,100],        isNew:false, cardKey:true  },
+  { id:'webperf',  group:'pengembangan', name:'Performansi Kinerja Website Official TUJ',             unit:'%',      target26:[90,90,90,90],            baseline25:[100,99,98,100],            isNew:false, cardKey:true  },
+  { id:'visitor',  group:'pengembangan', name:'Jumlah Visitor Web Official',                           unit:'Jumlah', target26:[40000,80000,100000,120000], baseline25:[70919,143313,201603,288559], isNew:false, cardKey:true },
+  { id:'artikel',  group:'pengembangan', name:'Jumlah Konten Artikel Website',                         unit:'Jumlah', target26:[36,36,36,36],            baseline25:null,                       isNew:true,  cardKey:true,  note:'Target per triwulan (bukan kumulatif)' },
+  { id:'siupps',   group:'pengembangan', name:'Dukungan Pengembangan SI UPPS TUJ',                    unit:'Jumlah', target26:[null,null,null,1],        baseline25:null,                       isNew:true,  cardKey:false, note:'Hanya diukur di TW4' },
+];
+
+const realisasi26 = {};
+indicators.forEach(ind => { realisasi26[ind.id] = [null,null,null,null]; });
+
+let currentTW   = 0;
+let currentPage = 'triwulan';
+let charts      = {};
+let sparkCharts = {};
+let annualCharts = {};
+
+// ── Status logic ──
+function getStatus(r, target) {
+  if (target === null) return 'tidak_diukur';
+  if (r === null || r === '' || r === undefined) return 'empty';
+  const rv = parseFloat(r), t = parseFloat(target);
+  if (isNaN(rv)) return 'empty';
+  if (rv >= t)        return 'green';
+  if (rv >= t * 0.95) return 'yellow';
+  return 'red';
+}
+const EMOJI = { green:'🟢', yellow:'🟡', red:'🔴', empty:'⚪', tidak_diukur:'➖' };
+const LABEL_S = { green:'On Track', yellow:'Near Target', red:'At Risk', empty:'Belum Diisi', tidak_diukur:'Tidak Diukur' };
+
+// ── Format ──
+function fmtRaw(val, unit) {
+  if (val === null || val === undefined || val === '') return '—';
+  const n = parseFloat(val); if (isNaN(n)) return '—';
+  if (unit === 'Jumlah') return n.toLocaleString('id-ID');
+  if (unit === 'Rating') return n.toFixed(2);
+  return n.toFixed(1) + '%';
+}
+function fmtGap(r, target, unit) {
+  if (target === null || r === null || r === '') return null;
+  const rv = parseFloat(r), t = parseFloat(target); if (isNaN(rv)) return null;
+  const gap = rv - t;
+  if (unit === 'Jumlah') return (gap>=0?'+':'')+Math.round(gap).toLocaleString('id-ID');
+  if (unit === 'Rating') return (gap>=0?'+':'')+gap.toFixed(2);
+  return (gap>=0?'+':'')+gap.toFixed(1)+'%';
+}
+
+// ═══════════════════════════════════════════════════
+//  PAGE: TRIWULAN — render functions
+// ═══════════════════════════════════════════════════
+
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  indicators.filter(i=>i.cardKey).forEach(ind => {
+    const tw = currentTW;
+    const target = ind.target26[tw];
+    const real   = realisasi26[ind.id][tw];
+    const status = getStatus(real, target);
+    const baseline = ind.baseline25 ? ind.baseline25[tw] : null;
+    const scls = status==='tidak_diukur'?'status-empty':`status-${status==='empty'?'empty':status}`;
+    const valH = (real===null||real==='')
+      ? `<div class="card-value empty">Belum Diisi</div>`
+      : `<div class="card-value">${fmtRaw(real,ind.unit)}</div>`;
+    const cmpH = (!ind.isNew && baseline!==null)
+      ? `<div class="card-compare"><span>Realisasi 2025:</span><span class="compare-val">${fmtRaw(baseline,ind.unit)}</span></div>`
+      : '';
+    const c = document.createElement('div');
+    c.className = `card ${scls}`;
+    c.innerHTML = `<div class="badge">${EMOJI[status]}</div>
+      <div class="card-label">${ind.name}</div>
+      ${valH}
+      <div class="card-target">Target: <span>${target!==null?fmtRaw(target,ind.unit):'—'}</span></div>
+      ${cmpH}`;
+    grid.appendChild(c);
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const groups = [
+    {key:'penjaminan',  label:'▸ Penjaminan Mutu dan Performansi'},
+    {key:'pengembangan',label:'▸ Pengembangan Lembaga'}
+  ];
+  groups.forEach(grp => {
+    const hdr = document.createElement('tr');
+    hdr.className = 'group-header';
+    hdr.innerHTML = `<td colspan="6">${grp.label}</td>`;
+    tbody.appendChild(hdr);
+    indicators.filter(i=>i.group===grp.key).forEach(ind => {
+      const tw = currentTW;
+      const target = ind.target26[tw];
+      const real   = realisasi26[ind.id][tw];
+      const status = getStatus(real, target);
+      const gap    = fmtGap(real, target, ind.unit);
+      const gcls   = gap===null?'dash':(gap.startsWith('+')?'pos':'neg');
+      const tgtCell = target!==null ? fmtRaw(target,ind.unit) : `<span class="tidak-diukur">Tidak Diukur</span>`;
+      let realCell, gapCell;
+      if (status==='tidak_diukur') {
+        realCell = `<span class="tidak-diukur">Tidak Diukur</span>`;
+        gapCell  = `<span class="td-gap dash">—</span>`;
+      } else if (real===null||real==='') {
+        realCell = `<span class="td-empty">—</span>`;
+        gapCell  = `<span class="td-gap dash">—</span>`;
+      } else {
+        realCell = `<span class="td-realisasi">${fmtRaw(real,ind.unit)}</span>`;
+        gapCell  = `<span class="td-gap ${gcls}">${gap}</span>`;
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="td-indicator">${ind.name}${ind.note?`<br><span style="font-size:10px;color:var(--text-muted);font-style:italic">${ind.note}</span>`:''}</td>
+        <td class="td-unit">${ind.unit}</td>
+        <td class="td-target">${tgtCell}</td>
+        <td>${realCell}</td>
+        <td>${gapCell}</td>
+        <td class="status-cell">${EMOJI[status]} <span style="font-size:10px;color:var(--text-secondary)">${LABEL_S[status]}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function renderStatusSummary() {
+  const tw = currentTW;
+  let c = {green:0,yellow:0,red:0,empty:0,tidak_diukur:0};
+  let total = 0;
+  indicators.forEach(ind => {
+    const s = getStatus(realisasi26[ind.id][tw], ind.target26[tw]);
+    c[s]++; total++;
+  });
+  document.getElementById('statusSummary').innerHTML = `
+    <div class="status-summary-title">Ringkasan Status<br><small style="font-weight:400;font-size:10px;color:var(--text-muted)">TW${tw+1}</small></div>
+    <div class="status-divider"></div>
+    <div class="status-items">
+      ${['green','yellow','red','empty','tidak_diukur'].map(s=>`
+      <div class="status-item">
+        <span class="si-emoji">${EMOJI[s]}</span>
+        <div><div class="si-count">${c[s]}</div><div class="si-label">${LABEL_S[s]}</div></div>
+      </div>`).join('')}
+    </div>
+    <div class="status-total">Total: <strong>${total}</strong></div>`;
+}
+
+function updateDataNote() {
+  const anyFilled = indicators.some(ind => realisasi26[ind.id].some(v => v!==null && v!==''));
+  document.getElementById('dataNoteEl').style.display = anyFilled ? 'none' : 'flex';
+}
+
+// ── Triwulan charts ──
+function getR26(id) {
+  return LABELS.map((_,i) => { const v=realisasi26[id][i]; return (v!==null&&v!=='')?parseFloat(v):null; });
+}
+
+function buildTWChart(id, data25, target26, r26key, yMin, yMax, isCur) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  const datasets = [];
+  if (data25) {
+    datasets.push({ label:'Realisasi 2025', data:data25, borderColor:'#9ca3af', borderDash:[5,4], borderWidth:1.5, pointRadius:3, pointBackgroundColor:'#9ca3af', tension:0.3, fill:false, spanGaps:true });
+  }
+  datasets.push({ label:'Target 2026', data:target26, borderColor:'rgba(204,0,0,0.4)', borderWidth:1.5, pointRadius:3, pointBackgroundColor:'rgba(204,0,0,0.4)', tension:0.3, fill:false, spanGaps:true });
+  datasets.push({ label:'Realisasi 2026', data:getR26(r26key), borderColor:'#CC0000', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#CC0000', tension:0.3, fill:false, spanGaps:false });
+  charts[id] = new Chart(ctx.getContext('2d'), {
+    type:'line',
+    data:{ labels:LABELS, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>{ if(c.parsed.y===null)return null; return c.dataset.label+': '+(isCur?c.parsed.y.toLocaleString('id-ID'):c.parsed.y); } } } },
+      scales:{
+        x:{ grid:{color:'#f0eeec'}, ticks:{font:{size:10},color:'#9a9a9a'} },
+        y:{ min:yMin, max:yMax, grid:{color:'#f0eeec'}, ticks:{ font:{size:10,family:"'DM Mono',monospace"}, color:'#9a9a9a', callback: isCur?v=>v>=1000?(v/1000).toFixed(0)+'K':v:v=>v } }
+      }
+    }
+  });
+}
+
+function renderTWCharts() {
+  buildTWChart('chartInfra',   [100,100,100,100],          [92,92,92,92],            'infra',   88,104,false);
+  buildTWChart('chartInsiden', [91.7,94.7,96.7,97.0],      [90,90,90,90],            'insiden', 85,105,false);
+  buildTWChart('chartFeedback',[4.95,4.96,4.98,4.91],      [4,4,4,4],                'feedback',3.5,5.5,false);
+  buildTWChart('chartCmdb',    [100,100,99.94,100],         [90,90,90,90],            'cmdb',    85,105,false);
+  buildTWChart('chartWebperf', [100,99,98,100],             [90,90,90,90],            'webperf', 85,105,false);
+  buildTWChart('chartVisitor', [70919,143313,201603,288559],[40000,80000,100000,120000],'visitor',0,320000,true);
+  // Indikator baru — no baseline25, pass null array
+  buildTWChart('chartArtikel', null, [36,36,36,36], 'artikel', 0, 50, false);
+  buildTWChart('chartRequest', null, [92,92,92,92], 'request', 80, 105, false);
+}
+function updateTWCharts() {
+  const keyMap = {
+    chartInfra:'infra', chartInsiden:'insiden', chartFeedback:'feedback',
+    chartCmdb:'cmdb', chartWebperf:'webperf', chartVisitor:'visitor',
+    chartArtikel:'artikel', chartRequest:'request'
+  };
+  Object.entries(keyMap).forEach(([cid,kid])=>{
+    if(charts[cid]){ charts[cid].data.datasets[charts[cid].data.datasets.length-1].data=getR26(kid); charts[cid].update(); }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PAGE: TAHUNAN — render functions
+// ═══════════════════════════════════════════════════
+
+function renderAnnualKpiCards() {
+  // Count status across all TW
+  let counts = {green:0,yellow:0,red:0,empty:0,tidak_diukur:0};
+  let totalSlots = 0;
+  indicators.forEach(ind=>{
+    [0,1,2,3].forEach(tw=>{
+      const s = getStatus(realisasi26[ind.id][tw], ind.target26[tw]);
+      counts[s]++; totalSlots++;
+    });
+  });
+  // % data entry
+  const filled = indicators.reduce((acc,ind)=>acc+[0,1,2,3].filter(tw=>realisasi26[ind.id][tw]!==null&&realisasi26[ind.id][tw]!=='').length,0);
+  const measurable = indicators.reduce((acc,ind)=>acc+[0,1,2,3].filter(tw=>ind.target26[tw]!==null).length,0);
+  const pct = measurable>0?Math.round(filled/measurable*100):0;
+
+  document.getElementById('annualKpiGrid').innerHTML = `
+    <div class="annual-kpi-card akc-green">
+      <div class="akc-label">🟢 On Track</div>
+      <div class="akc-value">${counts.green}</div>
+      <div class="akc-sub">dari ${totalSlots} slot total</div>
+    </div>
+    <div class="annual-kpi-card akc-yellow">
+      <div class="akc-label">🟡 Near Target</div>
+      <div class="akc-value">${counts.yellow}</div>
+      <div class="akc-sub">dari ${totalSlots} slot total</div>
+    </div>
+    <div class="annual-kpi-card akc-red">
+      <div class="akc-label">🔴 At Risk</div>
+      <div class="akc-value">${counts.red}</div>
+      <div class="akc-sub">dari ${totalSlots} slot total</div>
+    </div>
+    <div class="annual-kpi-card akc-gray">
+      <div class="akc-label">📋 Kelengkapan Data</div>
+      <div class="akc-value">${pct}%</div>
+      <div class="akc-sub">${filled} dari ${measurable} slot terisi</div>
+    </div>`;
+}
+
+function renderAnnualProgress() {
+  const card = document.getElementById('annualProgressCard');
+  const groups = [
+    {key:'penjaminan',  label:'Penjaminan Mutu dan Performansi'},
+    {key:'pengembangan',label:'Pengembangan Lembaga'}
+  ];
+  let html = `<h3>Tingkat Kelengkapan Data per Kelompok Indikator</h3>`;
+  groups.forEach(grp => {
+    const inds = indicators.filter(i=>i.group===grp.key);
+    const measurable = inds.reduce((a,ind)=>a+[0,1,2,3].filter(tw=>ind.target26[tw]!==null).length,0);
+    const filled     = inds.reduce((a,ind)=>a+[0,1,2,3].filter(tw=>ind.target26[tw]!==null&&realisasi26[ind.id][tw]!==null&&realisasi26[ind.id][tw]!=='').length,0);
+    const pct = measurable>0?Math.round(filled/measurable*100):0;
+    const barColor = pct>=80?'var(--green)':pct>=50?'var(--yellow)':'var(--red)';
+    html += `
+      <div class="completion-row" style="margin-bottom:10px;">
+        <div class="completion-label" style="font-size:11px;font-weight:600;">${grp.label}</div>
+        <div class="completion-bar-wrap"><div class="completion-bar" style="width:${pct}%;background:${barColor};"></div></div>
+        <div class="completion-pct" style="color:${barColor};">${pct}%</div>
+      </div>`;
+    // Per-indicator sub rows
+    inds.forEach(ind=>{
+      const m = [0,1,2,3].filter(tw=>ind.target26[tw]!==null).length;
+      const f = [0,1,2,3].filter(tw=>ind.target26[tw]!==null&&realisasi26[ind.id][tw]!==null&&realisasi26[ind.id][tw]!=='').length;
+      const p = m>0?Math.round(f/m*100):0;
+      const bc = p>=80?'var(--green)':p>=50?'var(--yellow)':'var(--red)';
+      html += `
+        <div class="completion-row" style="margin-bottom:6px;padding-left:16px;">
+          <div class="completion-label" style="font-size:10px;color:var(--text-secondary);">${ind.name.length>35?ind.name.slice(0,35)+'…':ind.name}</div>
+          <div class="completion-bar-wrap" style="height:5px;"><div class="completion-bar" style="width:${p}%;background:${bc};height:5px;"></div></div>
+          <div class="completion-pct" style="font-size:10px;color:${bc};">${p}%</div>
+        </div>`;
+    });
+  });
+  card.innerHTML = html;
+}
+
+function renderAnnualTable() {
+  const tbody = document.getElementById('annualTableBody');
+  tbody.innerHTML = '';
+  // Destroy old sparklines
+  Object.values(sparkCharts).forEach(c=>{ try{c.destroy();}catch(e){} });
+  sparkCharts = {};
+
+  const groups = [
+    {key:'penjaminan',  label:'▸ Penjaminan Mutu dan Performansi'},
+    {key:'pengembangan',label:'▸ Pengembangan Lembaga'}
+  ];
+
+  groups.forEach(grp => {
+    const hdr = document.createElement('tr');
+    hdr.className = 'annual-group-hdr';
+    hdr.innerHTML = `<td colspan="11">${grp.label}</td>`;
+    tbody.appendChild(hdr);
+
+    indicators.filter(i=>i.group===grp.key).forEach(ind => {
+      const tr = document.createElement('tr');
+      let cells = `
+        <td style="font-weight:500;">${ind.name}${ind.note?`<br><span style="font-size:10px;color:var(--text-muted);font-style:italic">${ind.note}</span>`:''}</td>
+        <td style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;text-align:center">${ind.unit}</td>`;
+
+      // TW1–TW4 pairs
+      [0,1,2,3].forEach(tw=>{
+        const target = ind.target26[tw];
+        const real   = realisasi26[ind.id][tw];
+        const status = getStatus(real, target);
+        const borderCls = tw>0?'tw-border-left':'';
+
+        // Target cell
+        cells += `<td class="${borderCls}" style="font-family:'DM Mono',monospace;font-size:11px;">${target!==null?fmtRaw(target,ind.unit):`<span style="color:var(--text-muted);font-style:italic;font-size:10px;">—</span>`}</td>`;
+
+        // Realisasi chip cell
+        let chipHtml;
+        if (status==='tidak_diukur') {
+          chipHtml = `<span class="cell-chip none">Tdk Diukur</span>`;
+        } else if (status==='empty') {
+          chipHtml = `<span class="cell-chip empty">Belum Diisi</span>`;
+        } else {
+          chipHtml = `<span class="cell-chip ${status}">${EMOJI[status]} ${fmtRaw(real,ind.unit)}</span>`;
+        }
+        cells += `<td>${chipHtml}</td>`;
+      });
+
+      // Sparkline cell
+      const sparkId = `spark_${ind.id}`;
+      cells += `<td class="sparkline-cell"><canvas id="${sparkId}" width="72" height="32"></canvas></td>`;
+
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+
+      // Draw sparkline after DOM insert
+      requestAnimationFrame(()=>{ drawSparkline(sparkId, ind); });
+    });
+  });
+}
+
+function drawSparkline(canvasId, ind) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  if (sparkCharts[canvasId]) { try{sparkCharts[canvasId].destroy();}catch(e){} }
+
+  const realData = [0,1,2,3].map(tw=>{
+    const v=realisasi26[ind.id][tw], t=ind.target26[tw];
+    return (t!==null&&v!==null&&v!=='')?parseFloat(v):null;
+  });
+  const targetData = ind.target26.map(t=>t!==null?t:null);
+  const hasAnyReal = realData.some(v=>v!==null);
+
+  sparkCharts[canvasId] = new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{
+      labels:LABELS,
+      datasets:[
+        { data:targetData, borderColor:'rgba(204,0,0,0.3)', borderWidth:1, pointRadius:0, tension:0.3, fill:false, spanGaps:true },
+        { data:hasAnyReal?realData:[null,null,null,null], borderColor:'#CC0000', borderWidth:1.5, pointRadius:2, pointBackgroundColor:'#CC0000', tension:0.3, fill:false, spanGaps:false }
+      ]
+    },
+    options:{
+      responsive:false, animation:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}}
+    }
+  });
+}
+
+function renderBaselineTable() {
+  const tbody = document.getElementById('baselineTableBody');
+  tbody.innerHTML = '';
+  const oldInds = indicators.filter(i=>!i.isNew&&i.baseline25!==null);
+  oldInds.forEach(ind=>{
+    const tr = document.createElement('tr');
+    let cells = `
+      <td style="font-weight:500;">${ind.name}</td>
+      <td style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;text-align:center">${ind.unit}</td>`;
+    [0,1,2,3].forEach(tw=>{
+      const b25 = ind.baseline25[tw];
+      const r26 = realisasi26[ind.id][tw];
+      const tgt = ind.target26[tw];
+      const diff = (b25!==null&&r26!==null&&r26!=='')?parseFloat(r26)-parseFloat(b25):null;
+      const diffColor = diff===null?'var(--text-muted)':diff>=0?'var(--green)':'var(--red)';
+      cells += `<td style="font-family:'DM Mono',monospace;font-size:11px;">${fmtRaw(b25,ind.unit)}</td>`;
+      if (r26===null||r26==='') {
+        cells += `<td><span class="cell-chip empty" style="font-size:10px;">Belum Diisi</span></td>`;
+      } else {
+        const s = getStatus(r26, tgt);
+        const diffStr = diff!==null?` <span style="font-size:9px;color:${diffColor}">(${diff>=0?'+':''}${ind.unit==='Jumlah'?Math.round(diff).toLocaleString('id-ID'):ind.unit==='Rating'?diff.toFixed(2):diff.toFixed(1)})</span>`:'';
+        cells += `<td><span class="cell-chip ${s}">${EMOJI[s]} ${fmtRaw(r26,ind.unit)}</span>${diffStr}</td>`;
+      }
+    });
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+}
+
+// Annual bar charts (target vs realisasi per TW)
+function buildAnnualChart(canvasId, indId, yLabel, yMin, yMax, isCur) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  if (annualCharts[canvasId]) annualCharts[canvasId].destroy();
+  const ind = indicators.find(i=>i.id===indId);
+  const targets = ind.target26.map(t=>t!==null?t:null);
+  const reals   = [0,1,2,3].map(tw=>{ const v=realisasi26[indId][tw]; return (v!==null&&v!=='')?parseFloat(v):null; });
+
+  annualCharts[canvasId] = new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:LABELS,
+      datasets:[
+        { label:'Target 2026',    data:targets, backgroundColor:'rgba(204,0,0,0.15)', borderColor:'rgba(204,0,0,0.5)', borderWidth:1.5, borderRadius:4 },
+        { label:'Realisasi 2026', data:reals,   backgroundColor: reals.map((r,i)=>{ if(r===null)return 'rgba(0,0,0,0)'; const s=getStatus(r,targets[i]); return s==='green'?'rgba(5,150,105,0.75)':s==='yellow'?'rgba(217,119,6,0.75)':'rgba(204,0,0,0.75)'; }), borderRadius:4 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:true, position:'bottom', labels:{font:{size:10},boxWidth:10,padding:8}}, tooltip:{ callbacks:{ label:c=>{ if(c.parsed.y===null)return null; return c.dataset.label+': '+(isCur?c.parsed.y.toLocaleString('id-ID'):c.parsed.y); } } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{size:11},color:'#9a9a9a'} },
+        y:{ min:yMin, max:yMax, grid:{color:'#f0eeec'}, ticks:{ font:{size:10,family:"'DM Mono',monospace"},color:'#9a9a9a', callback: isCur?v=>v>=1000?(v/1000).toFixed(0)+'K':v:v=>v } }
+      }
+    }
+  });
+}
+
+function renderAnnualCharts() {
+  buildAnnualChart('aChartInsiden','insiden','%',80,105,false);
+  buildAnnualChart('aChartVisitor','visitor','Jumlah',0,320000,true);
+  buildAnnualChart('aChartFeedback','feedback','Rating',3,5.5,false);
+  buildAnnualChart('aChartInfra','infra','%',85,105,false);
+  buildAnnualChart('aChartCmdb','cmdb','%',85,105,false);
+  buildAnnualChart('aChartWebperf','webperf','%',85,105,false);
+}
+
+// Full annual refresh
+function refreshAnnualPage() {
+  renderAnnualKpiCards();
+  renderAnnualProgress();
+  renderAnnualTable();
+  renderBaselineTable();
+  renderAnnualCharts();
+  const ts = document.getElementById('tsLabelAnnual');
+  if (ts) ts.textContent = document.getElementById('tsLabel').textContent;
+}
+
+// ═══════════════════════════════════════════════════
+//  PAGE SWITCHING
+// ═══════════════════════════════════════════════════
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id===`page-${page}`));
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.toggle('active', t.dataset.page===page));
+  // Show/hide TW tabs
+  document.getElementById('twTabsWrap').style.display = page==='triwulan'?'flex':'none';
+  if (page==='tahunan') refreshAnnualPage();
+}
+
+document.getElementById('pageNav').addEventListener('click', e=>{
+  if (e.target.classList.contains('page-tab')) switchPage(e.target.dataset.page);
+});
+
+// ═══════════════════════════════════════════════════
+//  TW SWITCHING
+// ═══════════════════════════════════════════════════
+
+function setTW(tw) {
+  currentTW = tw;
+  document.querySelectorAll('.tw-tab').forEach((t,i)=>t.classList.toggle('active',i===tw));
+  const lbls = ['Triwulan 1 (TW1)','Triwulan 2 (TW2)','Triwulan 3 (TW3)','Triwulan 4 (TW4)'];
+  document.getElementById('twLabel').textContent = lbls[tw];
+  document.getElementById('twPill').textContent  = `TW${tw+1}`;
+  const cp = document.getElementById('twChartPill');
+  if (cp) cp.textContent = `TW${tw+1} · 2025 vs 2026`;
+  renderCards(); renderTable(); renderStatusSummary(); updateDataNote();
+}
+
+document.getElementById('twTabsWrap').addEventListener('click', e=>{
+  if (e.target.classList.contains('tw-tab')) setTW(parseInt(e.target.dataset.tw)-1);
+});
+
+// ═══════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════
+
+function openModal() {
+  document.getElementById('modalTwSelect').value = currentTW+1;
+  renderModalForm();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function handleOverlayClick(e) { if(e.target===e.currentTarget)closeModal(); }
+
+function renderModalForm() {
+  const tw = parseInt(document.getElementById('modalTwSelect').value)-1;
+  document.getElementById('modalSubtitle').textContent = `Masukkan nilai realisasi untuk TW${tw+1} · 2026`;
+  const form = document.getElementById('modalForm');
+  form.innerHTML = '';
+  const groups=[{key:'penjaminan',label:'Penjaminan Mutu dan Performansi'},{key:'pengembangan',label:'Pengembangan Lembaga'}];
+  groups.forEach(grp=>{
+    const sec=document.createElement('div');
+    sec.className='form-section-header';
+    sec.textContent=grp.label;
+    form.appendChild(sec);
+    indicators.filter(i=>i.group===grp.key).forEach(ind=>{
+      const target=ind.target26[tw];
+      const div=document.createElement('div');
+      div.className='form-group';
+      if(target===null){
+        div.innerHTML=`<label>${ind.name} <span class="unit-hint">${ind.unit}</span></label><span class="disabled-label">➖ Tidak Diukur di TW${tw+1}</span>`;
+      } else {
+        const cur=realisasi26[ind.id][tw];
+        div.innerHTML=`<label for="inp_${ind.id}">${ind.name} <span class="unit-hint">${ind.unit} · Target: ${fmtRaw(target,ind.unit)}</span></label>
+          <input type="number" step="any" id="inp_${ind.id}" placeholder="Masukkan nilai..." value="${cur!==null?cur:''}">`;
+      }
+      form.appendChild(div);
+    });
+  });
+}
+
+function saveModal() {
+  const tw=parseInt(document.getElementById('modalTwSelect').value)-1;
+  indicators.forEach(ind=>{
+    if(ind.target26[tw]===null)return;
+    const input=document.getElementById(`inp_${ind.id}`);
+    if(!input)return;
+    const val=input.value.trim();
+    realisasi26[ind.id][tw]=val===''?null:parseFloat(val);
+  });
+  const now=new Date();
+  const tsStr='Terakhir diperbarui: '+now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('tsLabel').textContent=tsStr;
+  document.getElementById('tsLabelAnnual').textContent=tsStr;
+  setTW(tw);
+  updateTWCharts();
+  updateDataNote();
+  if(currentPage==='tahunan') refreshAnnualPage();
+  closeModal();
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const now=new Date();
+  const tsStr='Terakhir diperbarui: '+now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('tsLabel').textContent=tsStr;
+  document.getElementById('tsLabelAnnual').textContent=tsStr;
+  // Hide TW tabs on annual (initially on triwulan)
+  document.getElementById('twTabsWrap').style.display='flex';
+  setTW(0);
+  renderTWCharts();
+});
+</script>
+</body>
+</html>
